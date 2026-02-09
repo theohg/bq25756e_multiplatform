@@ -1,9 +1,11 @@
-/*
- * Copyright (c) 2025 Théo Heng
+/**
+ * @file bq25756e_platform_i2c.cpp
+ * @brief Platform-specific I2C implementations for the BQ25756E library.
  *
- * This file is part of the bq25756e_multiplatform library.
+ * Arduino/ESP32 path uses Wire; STM32 path uses HAL_I2C_Mem_Read/Write.
  *
- * Licensed under the MIT License. See the LICENSE file in the project root for full license information.
+ * @copyright Copyright (c) 2026 Theo Heng
+ * @license MIT License. See LICENSE file for details.
  */
 
 #include "bq25756e_platform_i2c.h"

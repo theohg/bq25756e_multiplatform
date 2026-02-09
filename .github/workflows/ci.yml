@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:  # Allow this workflow to be called by other workflows
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - board: esp32dev
+            name: ESP32
+          - board: nucleo_wb55rg_p
+            name: STM32 (STM32duino)
+
+    name: ${{ matrix.name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.platformio
+          key: pio-${{ matrix.board }}-${{ hashFiles('library.json') }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
+
+      - name: Install PlatformIO
+        run: pip install platformio
+
+      - name: Compile examples
+        run: |
+          pio ci --board=${{ matrix.board }} --project-option="lib_deps=$PWD" --project-option="lib_ldf_mode=deep+" examples/basic_charging/basic_charging.ino
+          pio ci --board=${{ matrix.board }} --project-option="lib_deps=$PWD" --project-option="lib_ldf_mode=deep+" examples/status_monitoring/status_monitoring.ino

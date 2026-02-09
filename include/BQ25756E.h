@@ -1,9 +1,13 @@
-/*
- * Copyright (c) 2025 Théo Heng
+/**
+ * @file bq25756e.h
+ * @brief BQ25756E battery charge controller driver class, register definitions, and configuration.
  *
- * This file is part of the bq25756e_multiplatform library.
+ * C++ driver for the TI BQ25756E buck-boost battery charger via I2C.
+ * Supports Arduino/ESP32 (Wire) and STM32 (HAL) platforms.
  *
- * Licensed under the MIT License. See the LICENSE file in the project root for full license information.
+ * @see https://www.ti.com/product/BQ25756E
+ * @copyright Copyright (c) 2026 Theo Heng
+ * @license MIT License. See LICENSE file for details.
  */
 
 #ifndef BQ25756E_H
@@ -595,126 +599,277 @@ private:
     void chargPrint(const char* message);
 
 public:
-    // Constructor
-    BQ25756E(uint8_t addr, uint16_t freq, uint16_t max_out_current, uint16_t max_in_current, uint16_t min_volt, uint16_t max_volt) : 
-            address(addr),  switching_freq(freq), max_charge_current(max_out_current), max_input_current(max_in_current), 
-            min_voltage(min_voltage), max_voltage(max_volt) {}
+    /**
+     * @brief Construct a BQ25756E driver instance.
+     * @param addr      7-bit I2C address (default 0x6A).
+     * @param freq      Switching frequency [kHz].
+     * @param max_out_current Maximum charge (output) current [mA].
+     * @param max_in_current  Maximum input current [mA].
+     * @param min_volt  Minimum allowable input voltage [mV].
+     * @param max_volt  Maximum allowable input voltage [mV].
+     */
+    BQ25756E(uint8_t addr, uint16_t freq, uint16_t max_out_current, uint16_t max_in_current, uint16_t min_volt, uint16_t max_volt) :
+            address(addr),  switching_freq(freq), max_charge_current(max_out_current), max_input_current(max_in_current),
+            min_voltage(min_volt), max_voltage(max_volt) {}
 
-    // Initialization function
+    /**
+     * @brief Initialize the charger with the given configuration.
+     * @param cfg Configuration struct with all charge parameters.
+     */
     void init(const BQ25756E_Config& cfg);
 
-    // --- Helper Functions ---
+    /* ──────────────────── Register Getters ──────────────────── */
+
+    /** @brief Read raw Charge Voltage Limit register (masked). */
     uint16_t getChargeVoltageLimitRegister();
+    /** @brief Get charge voltage limit in mV. */
     uint16_t getChargeVoltageLimit();
 
+    /** @brief Read raw Charge Current Limit register (masked). */
     uint16_t getChargeCurrentLimitRegister();
+    /** @brief Get charge current limit in mA. */
     uint16_t getChargeCurrentLimit();
 
+    /** @brief Read raw Input Current DPM Limit register (masked). */
     uint16_t getInputCurrentDPMLimitRegister();
+    /** @brief Get input current DPM limit in mA. */
     uint16_t getInputCurrentDPMLimit();
 
+    /** @brief Read raw Input Voltage DPM Limit register (masked). */
     uint16_t getInputVoltageDPMLimitRegister();
+    /** @brief Get input voltage DPM limit in mV. */
     uint16_t getInputVoltageDPMLimit();
 
+    /** @brief Read raw Reverse Mode Input Current Limit register (masked). */
     uint16_t getReverseModeInputCurrentLimitRegister();
+    /** @brief Get reverse-mode input current limit in mA. */
     uint16_t getReverseModeInputCurrentLimit();
 
+    /** @brief Read raw Reverse Mode Input Voltage Limit register (masked). */
     uint16_t getReverseModeInputVoltageLimitRegister();
+    /** @brief Get reverse-mode input voltage limit in mV. */
     uint16_t getReverseModeInputVoltageLimit();
 
+    /** @brief Read raw Precharge Current Limit register (masked). */
     uint16_t getPrechargeCurrentLimitRegister();
+    /** @brief Get precharge current limit in mA. */
     uint16_t getPrechargeCurrentLimit();
 
+    /** @brief Read raw Termination Current Limit register (masked). */
     uint16_t getTerminationCurrentLimitRegister();
+    /** @brief Get termination current limit in mA. */
     uint16_t getTerminationCurrentLimit();
 
+    /** @brief Read Precharge & Termination Control register. */
     uint8_t  getPrechargeTerminationControl();
+    /** @brief Read Timer Control register. */
     uint8_t  getTimerControl();
+    /** @brief Read Three-Stage Charge Control register. */
     uint8_t  getThreeStageChageControl();
+    /** @brief Read Charger Control register. */
     uint8_t  getChargerControl();
+    /** @brief Read Pin Control register. */
     uint8_t  getPinControl();
+    /** @brief Read Power Path & Reverse Mode Control register (masked). */
     uint8_t  getPowerPathReverseModeControl();
+    /** @brief Read MPPT Control register (masked). */
     uint8_t  getMPPTControl();
+    /** @brief Read TS Charging Threshold Control register. */
     uint8_t  getTSChargingThresholdControl();
+    /** @brief Read TS Charging Region Behavior Control register (masked). */
     uint8_t  getTSChargingRegionBehaviorControl();
+    /** @brief Read TS Reverse Mode Threshold Control register (masked). */
     uint8_t  getTSReverseModeThresholdControl();
+    /** @brief Read Reverse Undervoltage Control register (masked). */
     uint8_t  getReverseUndervoltageControl();
 
+    /** @brief Read raw VAC Max Power Point Detected register (masked). */
     uint16_t getVACMaxPowerPointDetectedRegister();
+    /** @brief Get VAC max power point voltage in mV. */
     uint16_t getVACMaxPowerPointDetected();
 
+    /* ──────────────────── Status Getters ──────────────────── */
+
+    /** @brief Read Charger Status 1 register. */
     uint8_t  getChargerStatus1();
+    /** @brief Get charge cycle status (bits 2:0 of Status 1). @return 0-7 charge state. */
     uint8_t  getChargeCycleStatus();
+    /** @brief Read Charger Status 2 register. */
     uint8_t  getChargerStatus2();
+    /** @brief Read Charger Status 3 register. */
     uint8_t  getChargerStatus3();
+    /** @brief Read Fault Status register (clear-on-read). */
     uint8_t  getFaultStatus();
+    /** @brief Read Charger Flag 1 register (clear-on-read). */
     uint8_t  getChargerFlag1();
+    /** @brief Read Charger Flag 2 register (clear-on-read). */
     uint8_t  getChargerFlag2();
+    /** @brief Read Fault Flag register (clear-on-read). */
     uint8_t  getFaultFlag();
+    /** @brief Read Charger Mask 1 register. */
     uint8_t  getChargerMask1();
+    /** @brief Read Charger Mask 2 register. */
     uint8_t  getChargerMask2();
+    /** @brief Read Fault Mask register. */
     uint8_t  getFaultMask();
+    /** @brief Read ADC Control register. */
     uint8_t  getADCControl();
+    /** @brief Read ADC Channel Control register. */
     uint8_t  getADCChannelControl();
 
+    /* ──────────────────── ADC Getters ──────────────────── */
+
+    /** @brief Read raw IAC ADC register (16-bit). */
     uint16_t getIACADCRegister();
+    /** @brief Get input current ADC reading in mA. */
     uint16_t getIACADC();
 
+    /** @brief Read raw IBAT ADC register (16-bit). */
     uint16_t getIBATADCRegister();
+    /** @brief Get battery current ADC reading in mA. */
     uint16_t getIBATADC();
 
+    /** @brief Read raw VAC ADC register (16-bit). */
     uint16_t getVACADCRegister();
+    /** @brief Get input voltage ADC reading in mV. */
     uint16_t getVACADC();
 
+    /** @brief Read raw VBAT ADC register (16-bit). */
     uint16_t getVBATADCRegister();
+    /** @brief Get battery voltage ADC reading in mV. */
     uint16_t getVBATADC();
 
+    /** @brief Read raw TS ADC register (16-bit). */
     uint16_t getTSADCRegister();
+    /** @brief Get TS pin reading as percentage of REGN. */
     double   getTSADC();
 
+    /** @brief Read raw VFB ADC register (16-bit). */
     uint16_t getVFBADCRegister();
+    /** @brief Get feedback voltage ADC reading in mV. */
     uint16_t getVFBADC();
 
+    /** @brief Read Gate Driver Strength Control register. */
     uint8_t  getGateDriverStrengthControl();
+    /** @brief Read Gate Driver Dead Time Control register (masked). */
     uint8_t  getGateDriverDeadTimeControl();
+    /** @brief Read Part Information register (part number + revision). */
     uint8_t  getPartInformation();
+    /** @brief Read Reverse Mode Battery Discharge Current register (masked). */
     uint8_t  getReverseModeBatteryDischargeCurrent();
 
-    // --- Control Functions ---
+    /* ──────────────────── Control Functions ──────────────────── */
+
+    /**
+     * @brief Set the FB voltage regulation limit.
+     * @param voltage_mV Voltage in mV (range 1504-1566, step 2 mV).
+     */
     void setChargeVoltageLimit(uint16_t voltage_mV);
+    /**
+     * @brief Set the fast-charge current regulation limit.
+     * @param current_mA Current in mA (range 400-20000, step 50 mA). Clamped to max_charge_current.
+     */
     void setChargeCurrentLimit(uint16_t current_mA);
+    /**
+     * @brief Set the input current DPM regulation limit.
+     * @param current_mA Current in mA (range 400-20000, step 50 mA). Clamped to max_input_current.
+     */
     void setInputCurrentLimit(uint16_t current_mA);
+    /**
+     * @brief Set the input voltage DPM regulation limit.
+     * @param voltage_mV Voltage in mV (range 4200-36000, step 20 mV).
+     */
     void setInputVoltageDPM(uint16_t voltage_mV = 4200);
+    /**
+     * @brief Set the precharge current regulation limit.
+     * @param current_mA Current in mA (range 250-10000, step 50 mA).
+     */
     void setPrechargeCurrentLimit(uint16_t current_mA);
+    /**
+     * @brief Set the termination current threshold.
+     * @param current_mA Current in mA (range 250-10000, step 50 mA).
+     */
     void setTerminationCurrentLimit(uint16_t current_mA);
+    /**
+     * @brief Configure precharge and termination control.
+     * @param enable_termination_control Enable charge termination.
+     * @param threshold_fast_charge 2-bit VBAT_LOWV threshold (0-3).
+     * @param enable_precharge_control Enable precharge / trickle charge.
+     */
     void configurePrechargeTermination(bool enable_termination_control, uint8_t threshold_fast_charge, bool enable_precharge_control);
+    /** @brief Set top-off timer (2-bit: 00=disable, 01=15min, 10=30min, 11=45min). */
     void configureTopOffTimer(uint8_t top_off_timer = 0b00);
+    /** @brief Set watchdog timer (2-bit: 00=disable, 01=40s, 10=80s, 11=160s). */
     void configureWatchdogTimer(uint8_t watchdog_timer = 0b00);
+    /**
+     * @brief Configure charge safety timer.
+     * @param enable_safety_timer Enable the timer.
+     * @param safety_timer 2-bit duration (00=5h, 01=8h, 10=12h, 11=24h).
+     * @param speed_during_DPM Slow timer 2x during DPM.
+     */
     void configureChargeSafetyTimer(bool enable_safety_timer = false, uint8_t safety_timer = 0b00, bool speed_during_DPM = false);
+    /** @brief Set constant-voltage timer (4-bit, 0=disable, 1-15 hours). */
     void configureConstantVoltageTimer(uint8_t CV_timer = 0b0000);
+    /** @brief Set auto-recharge threshold (2-bit: 00=93%, 01=94.3%, 10=95.2%, 11=97.6%). */
     void setAutoRechargeThreshold(uint8_t auto_recharge_threshold = 0b00);
+    /** @brief Trigger a watchdog timer reset (auto-clears). */
     void configureWatchdogTimerReset(bool enable_watchdog_reset = false);
+    /** @brief Enable or disable the /CE pin function. */
     void setCEpin(bool enable_CE_pin = true);
+    /** @brief Set EN_CHG bit behavior when watchdog expires. */
     void configureChargeBehaiorWatchdogExpires(bool disable_charge = false);
+    /** @brief Enable or disable high-impedance (HIZ) mode. */
     void setHighZmode(bool enable_highZ = false);
+    /** @brief Enable or disable battery discharge load (IBAT_LOAD). */
     void enableControlledDischarge(bool enable_discharge = false);
+    /** @brief Enable charging (sets EN_CHG bit). */
     void enableCharge();
+    /** @brief Disable charging (clears EN_CHG bit). */
     void disableCharge();
+    /**
+     * @brief Configure pin functions (ICHG, ILIM_HIZ, PG, STAT).
+     * @param enable_ICHG   Enable ICHG pin.
+     * @param enableILIM_HIZ Enable ILIM_HIZ pin.
+     * @param enable_PG     Enable PG pin (active low in register).
+     * @param enable_STAT   Enable STAT pins (active low in register).
+     */
     void enablePins(bool enable_ICHG = true, bool enableILIM_HIZ = true, bool enable_PG = true, bool enable_STAT = true);
+    /** @brief Reset all registers to power-on defaults. */
     void resetRegisters();
+    /** @brief Enable or disable the VAC load (IAC_LOAD). */
     void configureVACLoad(bool enable_load = false);
+    /** @brief Enable or disable PFM mode in light load. */
     void setPFMMode(bool enable_PFM = false);
+    /** @brief Enable or disable reverse (discharge) mode. */
     void setReverseMode(bool enable_reverse = false);
+    /** @brief Enable or disable the TS pin function. */
     void setTSPinFunction(bool enable_TS = false);
+    /**
+     * @brief Configure the ADC.
+     * @param enable_ADC   Enable ADC conversions.
+     * @param one_shot     true = one-shot mode, false = continuous.
+     * @param sample_speed 2-bit sample speed (00=15-bit, 01=14-bit, 10=13-bit).
+     * @param running_avg  Enable running average.
+     * @param init_avg     Start average from new conversion (vs. existing value).
+     */
     void configureADC(bool enable_ADC = true, bool one_shot = false, uint8_t sample_speed = 0b00, bool running_avg = true, bool init_avg = false);
+    /**
+     * @brief Enable or disable individual ADC channels.
+     * @note Channels are active-low in hardware (0 = enabled, 1 = disabled).
+     */
     void configureADCChannel(bool enable_IAC = true, bool enable_IBAT = true, bool enable_VAC = true, bool enable_VBAT = true, bool enable_TS = true, bool enable_VFB = true);
 
-    // --- Other Functions ---
+    /* ──────────────────── Debug / Diagnostics ──────────────────── */
+
+    /** @brief Print all configuration and status registers via debug output. */
     void printChargerConfig(bool initial_config = false);
     #ifdef BQ25756E_PLATFORM_ARDUINO
+        /** @brief Set the debug output stream (Arduino only). @param debugPort Pointer to a Stream (e.g. &Serial). */
         void setDebugStream(Stream* debugPort);
     #endif
+    /** @brief Print an 8-bit value as binary to the debug output. */
     void printByteAsBinary(uint8_t value);
+    /** @brief Print a 16-bit value as binary to the debug output. */
     void print2BytesAsBinary(uint16_t value);
 };
 

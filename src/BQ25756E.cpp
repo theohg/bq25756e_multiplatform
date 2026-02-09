@@ -1,12 +1,12 @@
-/*
- * Copyright (c) 2025 Théo Heng
+/**
+ * @file bq25756e.cpp
+ * @brief BQ25756E battery charge controller driver implementation.
  *
- * This file is part of the bq25756e_multiplatform library.
- *
- * Licensed under the MIT License. See the LICENSE file in the project root for full license information.
+ * @copyright Copyright (c) 2026 Theo Heng
+ * @license MIT License. See LICENSE file for details.
  */
 
-#include "BQ25756E.h"
+#include "bq25756e.h"
 
 // Initialize the BQ25756E charger with the configuration structure
 void BQ25756E::init(const BQ25756E_Config& cfg) {
@@ -86,10 +86,7 @@ uint16_t BQ25756E::getInputCurrentDPMLimit() {
 }
 
 uint16_t BQ25756E::getInputVoltageDPMLimitRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_INPUT_VOLTAGE_DPM_LIMIT + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_INPUT_VOLTAGE_DPM_LIMIT);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_INPUT_VOLTAGE_DPM_LIMIT);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_INPUT_VOLTAGE_DPM_LIMIT) & BQ25756E_INPUT_VOLTAGE_DPM_LIMIT;
 }
 
 uint16_t BQ25756E::getInputVoltageDPMLimit() {
@@ -102,10 +99,7 @@ uint16_t BQ25756E::getInputVoltageDPMLimit() {
 }
 
 uint16_t BQ25756E::getReverseModeInputCurrentLimitRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_REVERSE_MODE_INPUT_CURRENT_LIMIT + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_REVERSE_MODE_INPUT_CURRENT_LIMIT);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_REVERSE_MODE_INPUT_CURRENT_LIMIT);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_REVERSE_MODE_INPUT_CURRENT_LIMIT) & BQ25756E_REVERSE_MODE_INPUT_CURRENT_LIMIT;
 }
 
 uint16_t BQ25756E::getReverseModeInputCurrentLimit() {
@@ -118,10 +112,7 @@ uint16_t BQ25756E::getReverseModeInputCurrentLimit() {
 }
 
 uint16_t  BQ25756E::getReverseModeInputVoltageLimitRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_REVERSE_MODE_INPUT_CURRENT_LIMIT + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_REVERSE_MODE_INPUT_CURRENT_LIMIT);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_REVERSE_MODE_INPUT_VOLTAGE_LIMIT);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_REVERSE_MODE_INPUT_VOLTAGE_LIMIT) & BQ25756E_REVERSE_MODE_INPUT_VOLTAGE_LIMIT;
 }
 
 uint16_t BQ25756E::getReverseModeInputVoltageLimit() {
@@ -134,10 +125,7 @@ uint16_t BQ25756E::getReverseModeInputVoltageLimit() {
 }
 
 uint16_t BQ25756E::getPrechargeCurrentLimitRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_PRECHARGE_CURRENT_LIMIT + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_PRECHARGE_CURRENT_LIMIT);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_PRECHARGE_CURRENT_LIMIT);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_PRECHARGE_CURRENT_LIMIT) & BQ25756E_PRECHARGE_CURRENT_LIMIT;
 }
 
 uint16_t BQ25756E::getPrechargeCurrentLimit() {
@@ -150,10 +138,7 @@ uint16_t BQ25756E::getPrechargeCurrentLimit() {
 }
 
 uint16_t BQ25756E::getTerminationCurrentLimitRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_TERMINATION_CURRENT_LIMIT + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_TERMINATION_CURRENT_LIMIT);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_TERMINATION_CURRENT_LIMIT);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_TERMINATION_CURRENT_LIMIT) & BQ25756E_TERMINATION_CURRENT_LIMIT;
 }
 
 uint16_t BQ25756E::getTerminationCurrentLimit() {
@@ -210,10 +195,7 @@ uint8_t BQ25756E::getReverseUndervoltageControl() {
 }
 
 uint16_t BQ25756E::getVACMaxPowerPointDetectedRegister() {
-    uint8_t high_bits = bq25756e_i2c_read_register(address, BQ25756E_REG_VAC_MAX_POWER_POINT_DETECTED + 1);
-    uint8_t low_bits =  bq25756e_i2c_read_register(address, BQ25756E_REG_VAC_MAX_POWER_POINT_DETECTED);
-    uint16_t regValue = (high_bits << 8) | low_bits;
-    return (regValue & BQ25756E_VAC_MAX_POWER_POINT_DETECTED_MASK);
+    return bq25756e_i2c_read_register16(address, BQ25756E_REG_VAC_MAX_POWER_POINT_DETECTED) & BQ25756E_VAC_MAX_POWER_POINT_DETECTED_MASK;
 }
 
 uint16_t BQ25756E::getVACMaxPowerPointDetected() {
@@ -349,12 +331,9 @@ void BQ25756E::setChargeVoltageLimit(uint16_t voltage_mV) {
     const uint16_t minVoltage = 1504;
     const uint16_t maxVoltage = 1566; // Only a software limit, as no hardware voltage limit attribute exists
     if (voltage_mV < minVoltage || voltage_mV > maxVoltage) {
-        Serial.print("Error: Voltage out of range (");
-        Serial.print(minVoltage);
-        Serial.print("mV - ");
-        Serial.print(maxVoltage);
-        Serial.println("mV)");
-        // Assign a default value
+        char buf[80];
+        snprintf(buf, sizeof(buf), "Error: Voltage out of range (%umV - %umV)\n", minVoltage, maxVoltage);
+        chargPrint(buf);
         voltage_mV = 1536;
     }
     // Compute the 5-bit register value (step = 2mV, offset = 1504mV)
@@ -370,12 +349,9 @@ void BQ25756E::setChargeCurrentLimit(uint16_t current_mA) {
     // Use the lower between software limit (20000 mA) and the hardware limit (max_charge_current)
     uint16_t effectiveMaxCurrent = (max_charge_current < 20000 ? max_charge_current : 20000);
     if (current_mA < minCurrent || current_mA > effectiveMaxCurrent) {
-        _debugPort->print("Error: Requested charge current limit out of range (");
-        _debugPort->print(minCurrent);
-        _debugPort->print("mA - ");
-        _debugPort->print(effectiveMaxCurrent);
-        _debugPort->println("mA)");
-        // Assign a safe default value
+        char buf[80];
+        snprintf(buf, sizeof(buf), "Error: Charge current out of range (%umA - %umA)\n", minCurrent, effectiveMaxCurrent);
+        chargPrint(buf);
         current_mA = minCurrent;
     }
     config.chargeCurrentLimit = current_mA;
@@ -395,11 +371,9 @@ void BQ25756E::setInputCurrentLimit(uint16_t current_mA) {
     // Use the lower between software limit (20000 mA) and the hardware limit (max_input_current)
     uint16_t effectiveMaxCurrent = (max_input_current < 20000 ? max_input_current : 20000);
     if (current_mA < minCurrent || current_mA > effectiveMaxCurrent) {
-        Serial.print("Error: Requested input current limit out of range (");
-        Serial.print(minCurrent);
-        Serial.print("mA - ");
-        Serial.print(effectiveMaxCurrent);
-        Serial.println("mA)");
+        char buf[80];
+        snprintf(buf, sizeof(buf), "Error: Input current out of range (%umA - %umA)\n", minCurrent, effectiveMaxCurrent);
+        chargPrint(buf);
         return;
     }
     // Compute the 9-bit register value (step = 50mA)
@@ -418,11 +392,9 @@ void BQ25756E::setInputVoltageDPM(uint16_t voltage_mV) {
     // Define the minimum voltage required to allow charging
     // Use the higher between software limit (up to 36000 mV) and the hardware limit (min_voltage)
     if (voltage_mV < min_voltage || voltage_mV > max_voltage) {
-        Serial.print("Error: Requested Input Voltage DPM out of range (");
-        Serial.print(min_voltage);
-        Serial.print("mV - ");
-        Serial.print(max_voltage);
-        Serial.println("mV). Defaulting to minimum DPM limit.");
+        char buf[96];
+        snprintf(buf, sizeof(buf), "Error: Input Voltage DPM out of range (%umV - %umV)\n", min_voltage, max_voltage);
+        chargPrint(buf);
         voltage_mV = min_voltage;
     }
     // Compute the 12-bit register value (step = 20mV)
@@ -439,8 +411,8 @@ void BQ25756E::setInputVoltageDPM(uint16_t voltage_mV) {
 
 void BQ25756E::setPrechargeCurrentLimit(uint16_t current_mA) {
     if (current_mA < 250 || current_mA > 10000) {
-        Serial.print("Error: Requested precharge current limit out of range (250mA - 10000A)");
-        current_mA = 250; // Assign a safe default value
+        chargPrint("Error: Precharge current out of range (250mA - 10000mA)\n");
+        current_mA = 250;
     }
     config.prechargeCurrentLimit = current_mA;
     // Compute the 9-bit register value (step = 50mA)
@@ -457,8 +429,8 @@ void BQ25756E::setPrechargeCurrentLimit(uint16_t current_mA) {
 
 void BQ25756E::setTerminationCurrentLimit(uint16_t current_mA) {
     if (current_mA < 250 || current_mA > 10000) {
-        Serial.print("Error: Requested termination current limit out of range (250mA - 10000mA)");
-        current_mA = 250; // Assign a safe default value
+        chargPrint("Error: Termination current out of range (250mA - 10000mA)\n");
+        current_mA = 250;
     }
     config.terminationCurrentLimit = current_mA;
     // Compute the 9-bit register value (step = 50mA)
@@ -476,7 +448,7 @@ void BQ25756E::setTerminationCurrentLimit(uint16_t current_mA) {
 void BQ25756E::configurePrechargeTermination(bool terminationControlEnabled, uint8_t terminationThreshold, bool prechargeControlEnabled) {
     bq25756e_i2c_modify_register(address, BQ25756E_REG_PRECHARGE_TERMINATION_CONTROL, BQ25756E_EN_TERM, terminationControlEnabled);
     bq25756e_i2c_modify_register_bits(address, BQ25756E_REG_PRECHARGE_TERMINATION_CONTROL, BQ25756E_VBAT_LOWV, terminationThreshold << 1);
-    bq25756e_i2c_modify_register(address, BQ25756E_REG_PRECHARGE_TERMINATION_CONTROL, BQ25756E_EN_TERM, prechargeControlEnabled);
+    bq25756e_i2c_modify_register(address, BQ25756E_REG_PRECHARGE_TERMINATION_CONTROL, BQ25756E_EN_PRECHG, prechargeControlEnabled);
 }
 
 void BQ25756E::configureTopOffTimer(uint8_t top_off_timer) {
@@ -576,11 +548,11 @@ void BQ25756E::configureADC(bool enable_ADC, bool one_shot, uint8_t sample_speed
 }
 
 void BQ25756E::chargPrint(const char* msg) {
-    #ifdef DRV8214_PLATFORM_ARDUINO
+    #ifdef BQ25756E_PLATFORM_ARDUINO
         if (_debugPort) {
             _debugPort->print(msg);
         }
-    #elif defined(DRV8214_PLATFORM_STM32)
+    #elif defined(BQ25756E_PLATFORM_STM32)
         // Option 1: Using HAL_UART_Transmit directly
         // HAL_UART_Transmit(&huart2, (uint8_t*)msg, strlen(msg), HAL_MAX_DELAY);
     
@@ -589,39 +561,42 @@ void BQ25756E::chargPrint(const char* msg) {
     #endif
 }
 
-void BQ25756E::printChargerConfig(bool initial_config) 
+void BQ25756E::printChargerConfig(bool initial_config)
 {
+    char buf[64];
+
     chargPrint("----- CHARGER CONFIGURATION REGISTERS -----\n");
+
     chargPrint("Charge Voltage Limit: ");
     print2BytesAsBinary(getChargeVoltageLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getChargeVoltageLimit());
-    chargPrint(" mV) ");
+    snprintf(buf, sizeof(buf), "(%u mV) ", getChargeVoltageLimit());
+    chargPrint(buf);
+
     chargPrint("Charge Current Limit: ");
     print2BytesAsBinary(getChargeCurrentLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getChargeCurrentLimit());
-    chargPrint(" mA) ");
+    snprintf(buf, sizeof(buf), "(%u mA) ", getChargeCurrentLimit());
+    chargPrint(buf);
+
     chargPrint("Input Current DPM Limit: ");
     print2BytesAsBinary(getInputCurrentDPMLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getInputCurrentDPMLimit());
-    chargPrint(" mA)\n");
+    snprintf(buf, sizeof(buf), "(%u mA)\n", getInputCurrentDPMLimit());
+    chargPrint(buf);
+
     chargPrint("Input Voltage DPM Limit: ");
     print2BytesAsBinary(getInputVoltageDPMLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getInputVoltageDPMLimit());
-    chargPrint(" mV) ");
+    snprintf(buf, sizeof(buf), "(%u mV) ", getInputVoltageDPMLimit());
+    chargPrint(buf);
+
     chargPrint("Precharge Current Limit: ");
     print2BytesAsBinary(getPrechargeCurrentLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getPrechargeCurrentLimit());
-    chargPrint(" mA) ");
+    snprintf(buf, sizeof(buf), "(%u mA) ", getPrechargeCurrentLimit());
+    chargPrint(buf);
+
     chargPrint("Termination Current Limit: ");
     print2BytesAsBinary(getTerminationCurrentLimitRegister());
-    chargPrint("(");
-    _debugPort->print(getTerminationCurrentLimit());
-    chargPrint(" mA)\n");
+    snprintf(buf, sizeof(buf), "(%u mA)\n", getTerminationCurrentLimit());
+    chargPrint(buf);
+
     chargPrint("Precharge Termination Control: ");
     printByteAsBinary(getPrechargeTerminationControl());
     chargPrint("- Timer Control: ");
@@ -633,8 +608,9 @@ void BQ25756E::printChargerConfig(bool initial_config)
     chargPrint("- Pin Control: ");
     printByteAsBinary(getPinControl());
     chargPrint("\n");
+
     chargPrint("Power Path Reverse Mode Control: ");
-    printByteAsBinary(getPowerPathReverseModeControl());;
+    printByteAsBinary(getPowerPathReverseModeControl());
     chargPrint("MPPT Control: ");
     printByteAsBinary(getMPPTControl());
     chargPrint(" - TS Charging Threshold Control: ");
@@ -642,16 +618,18 @@ void BQ25756E::printChargerConfig(bool initial_config)
     chargPrint(" - TS Charging Region Behavior Control: ");
     printByteAsBinary(getTSChargingRegionBehaviorControl());
     chargPrint("\n");
+
     chargPrint("TS Reverse Mode Threshold Control: ");
     printByteAsBinary(getTSReverseModeThresholdControl());
     chargPrint(" - Reverse Undervoltage Control: ");
     printByteAsBinary(getReverseUndervoltageControl());
     chargPrint("\n");
+
     chargPrint("VAC Max Power Point Detected: ");
     print2BytesAsBinary(getVACMaxPowerPointDetectedRegister());
-    chargPrint("(");
-    _debugPort->print(getVACMaxPowerPointDetected());
-    chargPrint(" mV) ");
+    snprintf(buf, sizeof(buf), "(%u mV) ", getVACMaxPowerPointDetected());
+    chargPrint(buf);
+
     chargPrint("Charger Status 1: ");
     printByteAsBinary(getChargerStatus1());
     chargPrint("Charger Status 2: ");
@@ -661,6 +639,7 @@ void BQ25756E::printChargerConfig(bool initial_config)
     chargPrint("Fault Status: ");
     printByteAsBinary(getFaultStatus());
     chargPrint("\n");
+
     chargPrint("Charger Flag 1: ");
     printByteAsBinary(getChargerFlag1());
     chargPrint("Charger Flag 2: ");
@@ -674,41 +653,42 @@ void BQ25756E::printChargerConfig(bool initial_config)
     chargPrint("Fault Mask: ");
     printByteAsBinary(getFaultMask());
     chargPrint("\n");
+
     chargPrint("ADC Control: ");
     printByteAsBinary(getADCControl());
     chargPrint("ADC Channel Control: ");
     printByteAsBinary(getADCChannelControl());
+
     chargPrint("IAC ADC: ");
     print2BytesAsBinary(getIACADCRegister());
-    chargPrint("(");
-    _debugPort->print(getIACADC());
-    chargPrint(" mA) ");
+    snprintf(buf, sizeof(buf), "(%u mA) ", getIACADC());
+    chargPrint(buf);
+
     chargPrint("IBAT ADC: ");
     print2BytesAsBinary(getIBATADCRegister());
-    chargPrint("(");
-    _debugPort->print(getIBATADC());
-    chargPrint(" mA) ");
+    snprintf(buf, sizeof(buf), "(%u mA) ", getIBATADC());
+    chargPrint(buf);
+
     chargPrint("VAC ADC: ");
     print2BytesAsBinary(getVACADCRegister());
-    chargPrint("(");
-    _debugPort->print(getVACADC());
-    chargPrint(" mV) ");
-    chargPrint("\n");
+    snprintf(buf, sizeof(buf), "(%u mV)\n", getVACADC());
+    chargPrint(buf);
+
     chargPrint("VBAT ADC: ");
     print2BytesAsBinary(getVBATADCRegister());
-    chargPrint("(");
-    _debugPort->print(getVBATADC());
-    chargPrint(" mV) ");
+    snprintf(buf, sizeof(buf), "(%u mV) ", getVBATADC());
+    chargPrint(buf);
+
     chargPrint("TS ADC: ");
     print2BytesAsBinary(getTSADCRegister());
-    chargPrint("(");
-    _debugPort->print(getTSADC());
-    chargPrint(" C) ");
+    snprintf(buf, sizeof(buf), "(%u.%02u %%) ", (uint16_t)getTSADC(), (uint16_t)(getTSADC() * 100) % 100);
+    chargPrint(buf);
+
     chargPrint("VFB ADC: ");
     print2BytesAsBinary(getVFBADCRegister());
-    chargPrint("(");
-    _debugPort->print(getVFBADC());
-    chargPrint(" mV)\n");
+    snprintf(buf, sizeof(buf), "(%u mV)\n", getVFBADC());
+    chargPrint(buf);
+
     chargPrint("Gate Driver Strength Control: ");
     printByteAsBinary(getGateDriverStrengthControl());
     chargPrint("Gate Driver Dead Time Control: ");

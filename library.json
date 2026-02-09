@@ -1,19 +1,35 @@
 {
-    "name": "bq25756e_mutiplatform",
+    "name": "bq25756e_multiplatform",
     "version": "1.0.0",
     "description": "C++ library for the BQ25756E Charge Controller",
-    "keywords": "charger, charge controller, buck-boost, bq25756e, arduino, esp32, stm32",
+    "keywords": [
+      "charger", 
+      "charge controller", 
+      "buck-boost", 
+      "bq25756e", 
+      "arduino",
+      "esp32", 
+      "stm32"
+    ],
     "authors": [
       {
-        "name": "Théo Heng",
-        "email": "theoheng@icloud.com"
+        "name": "Theo Heng",
+        "email": "theoheng@icloud.com",
+        "maintainer": true
       }
     ],
     "repository": {
       "type": "git",
-      "url": "git@github.com:PatateMagique/bq25756e_multiplatform.git"
+      "url": "https://github.com/theohg/bq25756e_multiplatform"
     },
+    "license": "MIT",
     "frameworks": "arduino",
-    "platforms": "*"
-  }
-  
+    "platforms": "*",
+    "build": {
+        "srcDir": "src",
+        "includeDir": "include",
+        "flags": [
+            "-I include"
+        ]
+    }
+}
