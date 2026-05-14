@@ -3,55 +3,65 @@
 [![License](https://img.shields.io/github/license/theohg/bq25756e_multiplatform)](LICENSE.txt)
 [![Release](https://img.shields.io/github/v/release/theohg/bq25756e_multiplatform)](https://github.com/theohg/bq25756e_multiplatform/releases)
 [![CI](https://img.shields.io/github/actions/workflow/status/theohg/bq25756e_multiplatform/ci.yml?label=CI)](https://github.com/theohg/bq25756e_multiplatform/actions)
-![Platform](https://img.shields.io/badge/platform-Arduino%20%7C%20ESP32%20%7C%20STM32-orange)
+![Platform](https://img.shields.io/badge/platform-Arduino%20%7C%20ESP32%20%7C%20STM32%20%7C%20RP2040-orange)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-compatible-brightgreen)
 ![Language](https://img.shields.io/badge/C%2B%2B-11-blue)
 
-A C++ library for controlling the **[BQ25756E](https://www.ti.com/product/BQ25756E)** buck-boost battery charge controller from Texas Instruments via I2C. Supports Arduino, ESP32, and STM32 platforms with compile-time platform detection.
+A C++ library for controlling the **[BQ25756E](https://www.ti.com/product/BQ25756E)** buck-boost battery charge controller from Texas Instruments via I2C. It supports Arduino, ESP32, STM32, and RP2040 targets and uses a per-instance bus handle so multiple buses or devices can be used without global transport state.
 
 ## Features
 
-- **Multi-platform**: Single codebase for Arduino/ESP32 (Wire) and STM32 (HAL)
+- **Multi-platform**: Single codebase for Arduino/ESP32 (Wire), STM32 (HAL), and RP2040
+- **Bus-first design**: The active I2C bus is passed directly into the constructor
 - **Charge control**: Configurable voltage, current, pre-charge, and termination limits
 - **Safety timers**: Watchdog, top-off, charge safety, and constant-voltage timers
-- **ADC monitoring**: Input/battery voltage and current, temperature sensor, feedback voltage
-- **MPPT support**: Maximum Power Point Tracking for solar panel applications
-- **Fault protection**: Over-voltage, over-current, thermal shutdown detection
-- **Reverse mode**: Bidirectional power path with configurable discharge current
+- **ADC monitoring**: Input and battery voltage/current, TS pin, and feedback voltage reads
+- **MPPT support**: Maximum Power Point Tracking for solar-oriented applications
+- **Fault protection**: Over-voltage, over-current, watchdog, and thermal status handling
 
 ## Architecture
 
 ```mermaid
 graph TD
-    A[User Application] --> B[BQ25756E Driver Class]
-    B --> C[I2C Abstraction Layer]
-    C --> D{Platform?}
-    D -->|Arduino / ESP32| E[Wire Library]
-    D -->|STM32| F[HAL I2C]
+        A[User Application] --> B[BQ25756E Driver Class]
+        B --> C[I2C Abstraction Layer]
+        C --> D{Platform?}
+        D -->|Arduino / ESP32 / RP2040 Arduino core| E[Wire Library]
+        D -->|STM32| F[HAL I2C]
+        D -->|RP2040 Pico SDK| J[Pico SDK I2C]
 
-    B --> G[Charge Control]
-    B --> H[Configuration]
-    B --> I[ADC Monitoring]
+        B --> G[Charge Control]
+        B --> H[Configuration]
+        B --> I[ADC Monitoring]
 
-    G --> G1[setChargeVoltageLimit]
-    G --> G2[setChargeCurrentLimit]
-    G --> G3[enableCharge / disableCharge]
+        G --> G1[setChargeVoltageLimit]
+        G --> G2[setChargeCurrentLimit]
+        G --> G3[enableCharge / disableCharge]
 
-    style A fill:#e1f5fe
-    style B fill:#fff3e0
-    style C fill:#f3e5f5
-    style E fill:#e8f5e9
-    style F fill:#e8f5e9
+        style A fill:#e1f5fe
+        style B fill:#fff3e0
+        style C fill:#f3e5f5
+        style E fill:#e8f5e9
+        style F fill:#e8f5e9
+        style J fill:#e8f5e9
 ```
 
-```
+## Repository Layout
+
+```text
 include/
-├── bq25756e.h                 # Driver class, registers, bit masks, config struct
-├── bq25756e_platform_config.h # Compile-time platform detection
-└── bq25756e_platform_i2c.h    # Platform-agnostic I2C function declarations
+    bq25756e.h
+    bq25756e_platform_config.h
+    bq25756e_platform_i2c.h
 src/
-├── bq25756e.cpp               # Driver implementation
-└── bq25756e_platform_i2c.cpp  # Arduino (Wire) and STM32 (HAL) I2C implementations
+    bq25756e.cpp
+    bq25756e_platform_i2c.cpp
+examples/
+    basic_charging/
+    status_monitoring/
+.github/workflows/
+    ci.yml
+    release.yml
 ```
 
 ## Installation
@@ -62,24 +72,29 @@ Add to your `platformio.ini`:
 
 ```ini
 lib_deps =
-    https://github.com/theohg/bq25756e_multiplatform.git#v1.0.0
+        https://github.com/theohg/bq25756e_multiplatform.git#v1.1.0
 ```
 
 ### Arduino IDE
 
-1. Download or clone this repository
-2. Copy into your Arduino `libraries/` folder
-3. Restart the Arduino IDE
+Download the repository or a release zip, then add it through Sketch -> Include Library -> Add .ZIP Library.
 
-### STM32 (CubeMX / HAL)
+### STM32 HAL / Pico SDK
 
-1. Copy `include/` and `src/` into your project
-2. The HAL header is auto-detected from your STM32 family define (e.g. `STM32F4xx`). If auto-detection fails, add `-DBQ25756E_STM32_HAL_HEADER='"stm32f4xx_hal.h"'` to your build flags
-3. Call `bq25756e_i2c_set_handle(&hi2c1)` once in your initialization code before using the driver
+Copy `include/` and `src/` into your project, make sure the correct HAL or Pico SDK headers are available to the compiler, and keep I2C initialization in your application code.
+
+## Usage Pattern
+
+1. Initialize the I2C peripheral yourself.
+2. Pass the active bus handle as constructor argument 1: `&Wire`, `&hi2c1`, `i2c0`, or `i2c1`.
+3. Pass the 7-bit device address as constructor argument 2.
+4. Call `init(...)` before using the driver.
+
+For Arduino-based Pico builds, use `&Wire`. For pure Pico SDK builds, use `i2c0` or `i2c1` directly.
 
 ## Quick Start
 
-### Arduino / ESP32
+### Arduino / ESP32 / RP2040 Arduino core
 
 ```cpp
 #include <Wire.h>
@@ -92,66 +107,72 @@ lib_deps =
 #define MIN_INPUT_VOLTAGE   4200
 #define MAX_INPUT_VOLTAGE   36000
 
-BQ25756E charger(BQ25756E_ADDR, SWITCHING_FREQ,
-                 MAX_CHARGE_CURRENT, MAX_INPUT_CURRENT,
-                 MIN_INPUT_VOLTAGE, MAX_INPUT_VOLTAGE);
+BQ25756E charger(&Wire, BQ25756E_ADDR, SWITCHING_FREQ,
+                                 MAX_CHARGE_CURRENT, MAX_INPUT_CURRENT,
+                                 MIN_INPUT_VOLTAGE, MAX_INPUT_VOLTAGE);
 
 void setup() {
-    Serial.begin(115200);
-    Wire.begin();
+        Serial.begin(115200);
+        Wire.begin();
 
-    charger.setDebugStream(&Serial);
+        charger.setDebugStream(&Serial);
 
-    BQ25756E_Config cfg;
-    cfg.chargeVoltageLimit      = 1536;  // mV (FB voltage)
-    cfg.chargeCurrentLimit      = 2000;  // mA
-    cfg.inputCurrentDPMLimit    = 3000;  // mA
-    cfg.inputVoltageDPMLimit    = 4200;  // mV
-    cfg.prechargeCurrentLimit   = 500;   // mA
-    cfg.terminationCurrentLimit = 250;   // mA
-    cfg.terminationControlEnabled = true;
-    cfg.fastChargeThreshold     = 0b10;  // 66.7% x VFB_REG
-    cfg.prechargeControlEnabled = true;
-    cfg.chargeEnabled           = true;
-    cfg.verbose                 = true;
-    charger.init(cfg);
+        BQ25756E_Config cfg;
+        cfg.chargeVoltageLimit        = 1536;
+        cfg.chargeCurrentLimit        = 2000;
+        cfg.inputCurrentDPMLimit      = 3000;
+        cfg.inputVoltageDPMLimit      = 4200;
+        cfg.prechargeCurrentLimit     = 500;
+        cfg.terminationCurrentLimit   = 250;
+        cfg.terminationControlEnabled = true;
+        cfg.prechargeControlEnabled   = true;
+        cfg.chargeEnabled             = true;
+        cfg.verbose                   = true;
+        charger.init(cfg);
 }
 
 void loop() {
-    Serial.print("VBAT: ");
-    Serial.print(charger.getVBATADC());
-    Serial.println(" mV");
+        Serial.print("VBAT: ");
+        Serial.println(charger.getVBATADC());
 
-    Serial.print("Status: ");
-    Serial.println(charger.getChargeCycleStatus());
-
-    delay(2000);
+        Serial.print("Status: ");
+        Serial.println(charger.getChargeCycleStatus());
+        delay(2000);
 }
 ```
 
-### STM32
+### STM32 HAL / Pico SDK
 
-```c
-// In main.c, after MX_I2C1_Init():
+```cpp
 #include "bq25756e.h"
 
-bq25756e_i2c_set_handle(&hi2c1);  // Required before any BQ25756E operation
+BQ25756E charger(&hi2c1, 0x6A, 500, 5000, 5000, 4200, 36000);
+// For a pure Pico SDK project, pass i2c0 or i2c1 instead of &hi2c1.
 
-BQ25756E charger(0x6A, 500, 5000, 5000, 4200, 36000);
-BQ25756E_Config cfg;
-cfg.chargeVoltageLimit      = 1536;
-cfg.chargeCurrentLimit      = 2000;
-cfg.inputCurrentDPMLimit    = 3000;
-cfg.inputVoltageDPMLimit    = 4200;
-cfg.prechargeCurrentLimit   = 500;
-cfg.terminationCurrentLimit = 250;
-cfg.terminationControlEnabled = true;
-cfg.prechargeControlEnabled = true;
-cfg.chargeEnabled           = true;
-charger.init(cfg);
+void app_init() {
+        BQ25756E_Config cfg;
+        cfg.chargeVoltageLimit      = 1536;
+        cfg.chargeCurrentLimit      = 2000;
+        cfg.inputCurrentDPMLimit    = 3000;
+        cfg.inputVoltageDPMLimit    = 4200;
+        cfg.prechargeCurrentLimit   = 500;
+        cfg.terminationCurrentLimit = 250;
+        cfg.chargeEnabled           = true;
+        charger.init(cfg);
+}
 ```
 
-> See the [`examples/`](examples/) folder for complete, compilable examples.
+## Functional Overview
+
+### Charger Capabilities
+
+| Capability | Description |
+|------------|-------------|
+| Charge configuration | Set charge voltage, fast-charge current, pre-charge, and termination limits |
+| Input management | Configure input current and voltage DPM thresholds |
+| Safety features | Control watchdog, top-off, safety timer, and constant-voltage timing |
+| Monitoring | Read battery, input, feedback, current, and temperature-related ADC channels |
+| Advanced control | Use MPPT and reverse-mode related settings when the application needs them |
 
 ## API Overview
 
@@ -159,14 +180,14 @@ charger.init(cfg);
 
 | Method | Description |
 |--------|-------------|
-| `init(cfg)` | Initialize charger with configuration struct |
-| `setChargeVoltageLimit(mV)` | Set FB voltage regulation limit |
+| `init(cfg)` | Initialize charger with a configuration struct |
+| `setChargeVoltageLimit(mV)` | Set the FB voltage regulation limit |
 | `setChargeCurrentLimit(mA)` | Set fast-charge current limit |
 | `setInputCurrentLimit(mA)` | Set input current DPM limit |
 | `setInputVoltageDPM(mV)` | Set input voltage DPM limit |
 | `enableCharge()` / `disableCharge()` | Enable or disable charging |
 | `setReverseMode(enable)` | Enable or disable reverse mode |
-| `resetRegisters()` | Reset all registers to defaults |
+| `resetRegisters()` | Reset device registers to defaults |
 
 ### Configuration
 
@@ -174,25 +195,25 @@ charger.init(cfg);
 |--------|-------------|
 | `setPrechargeCurrentLimit(mA)` | Set pre-charge current |
 | `setTerminationCurrentLimit(mA)` | Set termination current threshold |
-| `configurePrechargeTermination(...)` | Configure pre-charge and termination |
+| `configurePrechargeTermination(...)` | Configure pre-charge and termination behavior |
 | `configureTopOffTimer(timer)` | Set top-off timer duration |
 | `configureWatchdogTimer(timer)` | Set watchdog timer duration |
 | `configureChargeSafetyTimer(...)` | Configure charge safety timer |
-| `configureADC(...)` | Configure ADC mode, sample speed, averaging |
-| `setTSPinFunction(enable)` | Enable/disable TS pin |
+| `configureADC(...)` | Configure ADC mode, sampling, and averaging |
+| `setTSPinFunction(enable)` | Enable or disable TS pin handling |
 
-### Status & ADC
+### Status and ADC
 
 | Method | Returns |
 |--------|---------|
-| `getChargeCycleStatus()` | Charge cycle state (0-7) |
-| `getChargerStatus1/2/3()` | Status register bytes |
-| `getFaultStatus()` | Fault flags (OV, OC, TSHUT, etc.) |
+| `getChargeCycleStatus()` | Charge cycle state |
+| `getChargerStatus1()` / `getChargerStatus2()` / `getChargerStatus3()` | Status register bytes |
+| `getFaultStatus()` | Fault flags |
 | `getVBATADC()` | Battery voltage [mV] |
 | `getVACADC()` | Input voltage [mV] |
 | `getIBATADC()` | Battery current [mA] |
 | `getIACADC()` | Input current [mA] |
-| `getTSADC()` | TS pin reading [% of REGN] |
+| `getTSADC()` | TS pin reading |
 | `getVFBADC()` | Feedback voltage [mV] |
 | `getPartInformation()` | Part number and revision |
 
@@ -200,11 +221,28 @@ charger.init(cfg);
 
 | Method | Description |
 |--------|-------------|
-| `setDebugStream(&Serial)` | Set debug output stream (Arduino only) |
-| `printChargerConfig()` | Print all register values |
+| `setDebugStream(&Serial)` | Set debug output stream on Arduino-style targets |
+| `printChargerConfig()` | Print register values and configuration |
+
+## Examples
+
+- `examples/basic_charging/basic_charging.ino`
+- `examples/status_monitoring/status_monitoring.ino`
+
+## Notes
+
+- Device addresses are always 7-bit.
+- For Arduino-based Pico builds, use `&Wire`; for pure Pico SDK builds, pass `i2c0` or `i2c1`.
+- `setDebugStream()` is optional and mainly useful on Arduino-style targets.
+- PlatformIO CI compiles the examples on Arduino Nano, ESP32, STM32, and RP2040.
+
+## You Like This Library? See Also
+
+- [DRV8214 Multiplatform](https://github.com/theohg/drv8214_multiplatform)
+- [INA228 Multiplatform](https://github.com/theohg/ina228_multiplatform)
 
 ## License
 
-MIT License -- see [LICENSE.txt](LICENSE.txt) for details.
+MIT License. See [LICENSE.txt](LICENSE.txt) for details.
 
 Copyright (c) 2026 Theo Heng

@@ -1,29 +1,34 @@
 {
     "name": "bq25756e_multiplatform",
-    "version": "1.0.0",
-    "description": "C++ library for the BQ25756E Charge Controller",
+    "version": "1.1.0",
+    "description": "C++ library for the TI BQ25756E buck-boost battery charge controller",
     "keywords": [
-      "charger", 
-      "charge controller", 
-      "buck-boost", 
-      "bq25756e", 
-      "arduino",
-      "esp32", 
-      "stm32"
+        "charger",
+        "charge-controller",
+        "buck-boost",
+        "bq25756e",
+        "arduino",
+        "esp32",
+        "stm32",
+        "rp2040",
+        "i2c"
     ],
     "authors": [
-      {
-        "name": "Theo Heng",
-        "email": "theoheng@icloud.com",
-        "maintainer": true
-      }
+        {
+            "name": "Theo Heng",
+            "email": "theoheng@icloud.com",
+            "maintainer": true
+        }
     ],
     "repository": {
-      "type": "git",
-      "url": "https://github.com/theohg/bq25756e_multiplatform"
+        "type": "git",
+        "url": "https://github.com/theohg/bq25756e_multiplatform"
     },
     "license": "MIT",
-    "frameworks": "arduino",
+    "frameworks": [
+        "arduino",
+        "raspberrypi-pico"
+    ],
     "platforms": "*",
     "build": {
         "srcDir": "src",

@@ -8,8 +8,70 @@
 
 #include "bq25756e.h"
 
+void BQ25756E::bq25756e_i2c_write_register(uint8_t device_address, uint8_t reg, uint8_t value) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return;
+    }
+    _lastError = ::bq25756e_i2c_write_register(_bus, device_address, reg, value)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+}
+
+void BQ25756E::bq25756e_i2c_write_register16(uint8_t device_address, uint8_t reg, uint16_t value) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return;
+    }
+    _lastError = ::bq25756e_i2c_write_register16(_bus, device_address, reg, value)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+}
+
+uint8_t BQ25756E::bq25756e_i2c_read_register(uint8_t device_address, uint8_t reg) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return 0;
+    }
+
+    uint8_t value = 0;
+    _lastError = ::bq25756e_i2c_read_register(_bus, device_address, reg, &value)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+    return (_lastError == BQ25756E_OK) ? value : 0;
+}
+
+uint16_t BQ25756E::bq25756e_i2c_read_register16(uint8_t device_address, uint8_t reg) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return 0;
+    }
+
+    uint16_t value = 0;
+    _lastError = ::bq25756e_i2c_read_register16(_bus, device_address, reg, &value)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+    return (_lastError == BQ25756E_OK) ? value : 0;
+}
+
+void BQ25756E::bq25756e_i2c_modify_register(uint8_t device_address, uint8_t reg, uint8_t mask, bool enable) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return;
+    }
+    _lastError = ::bq25756e_i2c_modify_register(_bus, device_address, reg, mask, enable)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+}
+
+void BQ25756E::bq25756e_i2c_modify_register_bits(uint8_t device_address, uint8_t reg, uint8_t mask, uint8_t new_value_for_bits) {
+    if (_bus == NULL) {
+        _lastError = BQ25756E_ERR_HANDLE;
+        return;
+    }
+    _lastError = ::bq25756e_i2c_modify_register_bits(_bus, device_address, reg, mask, new_value_for_bits)
+               ? BQ25756E_OK : BQ25756E_ERR_I2C;
+}
+
 // Initialize the BQ25756E charger with the configuration structure
 void BQ25756E::init(const BQ25756E_Config& cfg) {
+
+    _lastError = BQ25756E_OK;
 
     // Save the configuration
     config = cfg;

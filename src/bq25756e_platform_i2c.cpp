@@ -10,39 +10,33 @@
 
 #include "bq25756e_platform_i2c.h"
 
-#ifdef BQ25756E_PLATFORM_STM32
-    static I2C_HandleTypeDef* bq25756e_i2c_handle = NULL; // Static pointer to the I2C handle for BQ25756E
-
-    /**
-     * @brief Sets the I2C handle for STM32 platforms.
-     * @param hi2c Pointer to the I2C_HandleTypeDef structure.
-     */
-    void bq25756e_i2c_set_handle(I2C_HandleTypeDef* hi2c) {
-        bq25756e_i2c_handle = hi2c;
-    }
-#endif
-
 /**
  * @brief Write an 8-bit value to a specific BQ25756E register.
+ * @param bus The bus handle to use.
  * @param device_address The I2C address of the BQ25756E.
  * @param reg The register address to write to.
  * @param value The 8-bit value to write.
  */
-void bq25756e_i2c_write_register(uint8_t device_address, uint8_t reg, uint8_t value) {
-#ifdef BQ25756E_PLATFORM_ARDUINO
-    Wire.beginTransmission(device_address);
-    Wire.write(reg);
-    Wire.write(value);
-    Wire.endTransmission();
-#elif defined(BQ25756E_PLATFORM_STM32)
-    if (bq25756e_i2c_handle == NULL) {
-        // Handle error: I2C handle not set
-        return;
+bool bq25756e_i2c_write_register(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint8_t value) {
+    if (bus == NULL) {
+        return false;
     }
-    // For STM32, HAL_I2C_Mem_Write is often preferred for register writes.
-    // It sends the register address and then the data.
-    HAL_I2C_Mem_Write(bq25756e_i2c_handle, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY);
-    // Add error handling for HAL_StatusTypeDef if needed
+
+#ifdef BQ25756E_PLATFORM_ARDUINO
+    bus->beginTransmission(device_address);
+    bus->write(reg);
+    bus->write(value);
+    return bus->endTransmission() == 0;
+#elif defined(BQ25756E_PLATFORM_STM32)
+    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY) == HAL_OK;
+#elif defined(BQ25756E_PLATFORM_RP2040)
+    uint8_t data[2] = { reg, value };
+    return i2c_write_blocking(bus, device_address, data, 2, false) == 2;
+#else
+    (void)device_address;
+    (void)reg;
+    (void)value;
+    return false;
 #endif
 }
 
@@ -53,25 +47,33 @@ void bq25756e_i2c_write_register(uint8_t device_address, uint8_t reg, uint8_t va
  * @param reg The register address to write to.
  * @param value The 16-bit value to write.
  */
-void bq25756e_i2c_write_register16(uint8_t device_address, uint8_t reg, uint16_t value) {
-#ifdef BQ25756E_PLATFORM_ARDUINO
-    Wire.beginTransmission(device_address);
-    Wire.write(reg);
-    Wire.write(value & 0xFF);          // Write LSB
-    Wire.write((value >> 8) & 0xFF);   // Write MSB
-    Wire.endTransmission();
-#elif defined(BQ25756E_PLATFORM_STM32)
-    if (bq25756e_i2c_handle == NULL) {
-        // Handle error: I2C handle not set
-        return;
+bool bq25756e_i2c_write_register16(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint16_t value) {
+    if (bus == NULL) {
+        return false;
     }
+
+#ifdef BQ25756E_PLATFORM_ARDUINO
+    bus->beginTransmission(device_address);
+    bus->write(reg);
+    bus->write(value & 0xFF);
+    bus->write((value >> 8) & 0xFF);
+    return bus->endTransmission() == 0;
+#elif defined(BQ25756E_PLATFORM_STM32)
     uint8_t data_payload[2];
-    data_payload[0] = value & 0xFF;          // LSB
-    data_payload[1] = (value >> 8) & 0xFF;   // MSB
-    
-    // HAL_I2C_Mem_Write will send: START | ADDR+W | REG_ADDR | DATA_PAYLOAD[0] | DATA_PAYLOAD[1] | STOP
-    HAL_I2C_Mem_Write(bq25756e_i2c_handle, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_payload, 2, HAL_MAX_DELAY);
-    // Add error handling for HAL_StatusTypeDef if needed
+    data_payload[0] = value & 0xFF;
+    data_payload[1] = (value >> 8) & 0xFF;
+    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_payload, 2, HAL_MAX_DELAY) == HAL_OK;
+#elif defined(BQ25756E_PLATFORM_RP2040)
+    uint8_t data_payload[3];
+    data_payload[0] = reg;
+    data_payload[1] = value & 0xFF;
+    data_payload[2] = (value >> 8) & 0xFF;
+    return i2c_write_blocking(bus, device_address, data_payload, 3, false) == 3;
+#else
+    (void)device_address;
+    (void)reg;
+    (void)value;
+    return false;
 #endif
 }
 
@@ -81,34 +83,38 @@ void bq25756e_i2c_write_register16(uint8_t device_address, uint8_t reg, uint16_t
  * @param reg The register address to read from.
  * @return The 8-bit value read from the register, or 0 on error.
  */
-uint8_t bq25756e_i2c_read_register(uint8_t device_address, uint8_t reg) {
-#ifdef BQ25756E_PLATFORM_ARDUINO
-    Wire.beginTransmission(device_address);
-    Wire.write(reg);
-    if (Wire.endTransmission(false) != 0) { // Send repeated start, check for NACK on address phase
-        return 0; // Error condition
-    }
-    
-    if (Wire.requestFrom(device_address, (uint8_t)1) != 1) { // Request 1 byte
-        return 0; // Error condition, did not receive 1 byte
+bool bq25756e_i2c_read_register(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint8_t* out) {
+    if (bus == NULL || out == NULL) {
+        return false;
     }
 
-    if (Wire.available()) {
-        return Wire.read();
+#ifdef BQ25756E_PLATFORM_ARDUINO
+    bus->beginTransmission(device_address);
+    bus->write(reg);
+    if (bus->endTransmission(false) != 0) {
+        return false;
     }
-    return 0; // Should not happen if requestFrom succeeded and Wire.available() is true
+
+    if (bus->requestFrom(device_address, static_cast<uint8_t>(1)) != 1) {
+        return false;
+    }
+
+    if (!bus->available()) {
+        return false;
+    }
+    *out = bus->read();
+    return true;
 #elif defined(BQ25756E_PLATFORM_STM32)
-    if (bq25756e_i2c_handle == NULL) {
-        // Handle error: I2C handle not set
-        return 0;
+    return HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, out, 1, HAL_MAX_DELAY) == HAL_OK;
+#elif defined(BQ25756E_PLATFORM_RP2040)
+    if (i2c_write_blocking(bus, device_address, &reg, 1, true) != 1) {
+        return false;
     }
-    uint8_t data = 0;
-    // HAL_I2C_Mem_Read is suitable here.
-    // It sends: START | ADDR+W | REG_ADDR | RESTART | ADDR+R | READ_DATA | STOP
-    if (HAL_I2C_Mem_Read(bq25756e_i2c_handle, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, &data, 1, HAL_MAX_DELAY) == HAL_OK) {
-        return data;
-    }
-    return 0; // Error
+    return i2c_read_blocking(bus, device_address, out, 1, false) == 1;
+#else
+    (void)device_address;
+    (void)reg;
+    return false;
 #endif
 }
 
@@ -119,38 +125,50 @@ uint8_t bq25756e_i2c_read_register(uint8_t device_address, uint8_t reg) {
  * @param reg The register address to read from.
  * @return The 16-bit value read from the register, or 0 on error.
  */
-uint16_t bq25756e_i2c_read_register16(uint8_t device_address, uint8_t reg) {
+bool bq25756e_i2c_read_register16(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint16_t* out) {
+    if (bus == NULL || out == NULL) {
+        return false;
+    }
+
 #ifdef BQ25756E_PLATFORM_ARDUINO
-    Wire.beginTransmission(device_address);
-    Wire.write(reg);  
-    if (Wire.endTransmission(false) != 0) { // Send repeated start
-        return 0; // Error
+    bus->beginTransmission(device_address);
+    bus->write(reg);
+    if (bus->endTransmission(false) != 0) {
+        return false;
     }
 
-    if (Wire.requestFrom(device_address, (uint8_t)2) != 2) { // Request 2 bytes
-        return 0; // Error, did not receive 2 bytes
+    if (bus->requestFrom(device_address, static_cast<uint8_t>(2)) != 2) {
+        return false;
     }
 
-    if (Wire.available() >= 2) {
-        uint8_t lsb = Wire.read();
-        uint8_t msb = Wire.read();
-        return (static_cast<uint16_t>(msb) << 8) | lsb;
+    if (bus->available() < 2) {
+        return false;
     }
-    return 0; // Should not happen
+    uint8_t lsb = bus->read();
+    uint8_t msb = bus->read();
+    *out = (static_cast<uint16_t>(msb) << 8) | lsb;
+    return true;
 #elif defined(BQ25756E_PLATFORM_STM32)
-    if (bq25756e_i2c_handle == NULL) {
-        // Handle error: I2C handle not set
-        return 0;
+    uint8_t data_buffer[2];
+    if (HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_buffer, 2, HAL_MAX_DELAY) == HAL_OK) {
+        *out = (static_cast<uint16_t>(data_buffer[1]) << 8) | data_buffer[0];
+        return true;
     }
-    uint8_t data_buffer[2]; // Buffer to store LSB and MSB
-
-    // HAL_I2C_Mem_Read will read 2 bytes starting from the specified register address.
-    // The device (BQ25756E) sends LSB then MSB. So, data_buffer[0] will be LSB, data_buffer[1] will be MSB.
-    if (HAL_I2C_Mem_Read(bq25756e_i2c_handle, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_buffer, 2, HAL_MAX_DELAY) == HAL_OK) {
-        // Combine LSB (data_buffer[0]) and MSB (data_buffer[1]) into a 16-bit value
-        return (static_cast<uint16_t>(data_buffer[1]) << 8) | data_buffer[0];
+    return false;
+#elif defined(BQ25756E_PLATFORM_RP2040)
+    uint8_t data_buffer[2] = {0, 0};
+    if (i2c_write_blocking(bus, device_address, &reg, 1, true) != 1) {
+        return false;
     }
-    return 0; // Error
+    if (i2c_read_blocking(bus, device_address, data_buffer, 2, false) != 2) {
+        return false;
+    }
+    *out = (static_cast<uint16_t>(data_buffer[1]) << 8) | data_buffer[0];
+    return true;
+#else
+    (void)device_address;
+    (void)reg;
+    return false;
 #endif
 }
 
@@ -161,8 +179,11 @@ uint16_t bq25756e_i2c_read_register16(uint8_t device_address, uint8_t reg) {
  * @param mask The bitmask to apply.
  * @param enable True to set bits, false to clear bits.
  */
-void bq25756e_i2c_modify_register(uint8_t device_address, uint8_t reg, uint8_t mask, bool enable) {
-    uint8_t current_value = bq25756e_i2c_read_register(device_address, reg);
+bool bq25756e_i2c_modify_register(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint8_t mask, bool enable) {
+    uint8_t current_value = 0;
+    if (!bq25756e_i2c_read_register(bus, device_address, reg, &current_value)) {
+        return false;
+    }
     
     uint8_t new_value;
     if (enable) {
@@ -172,8 +193,9 @@ void bq25756e_i2c_modify_register(uint8_t device_address, uint8_t reg, uint8_t m
     }
     // Only write if the value has changed
     if (new_value != current_value) {
-        bq25756e_i2c_write_register(device_address, reg, new_value);
+        return bq25756e_i2c_write_register(bus, device_address, reg, new_value);
     }
+    return true;
 }
 
 /**
@@ -183,13 +205,17 @@ void bq25756e_i2c_modify_register(uint8_t device_address, uint8_t reg, uint8_t m
  * @param mask The bitmask indicating which bits to modify.
  * @param new_value_for_bits The new value for the bits defined by the mask. Other bits are preserved.
  */
-void bq25756e_i2c_modify_register_bits(uint8_t device_address, uint8_t reg, uint8_t mask, uint8_t new_value_for_bits) {
-    uint8_t current_value = bq25756e_i2c_read_register(device_address, reg);
+bool bq25756e_i2c_modify_register_bits(bus_handle_t bus, uint8_t device_address, uint8_t reg, uint8_t mask, uint8_t new_value_for_bits) {
+    uint8_t current_value = 0;
+    if (!bq25756e_i2c_read_register(bus, device_address, reg, &current_value)) {
+        return false;
+    }
     
     // Clear the bits defined by the mask in the current value, then OR with the new value (also masked)
     uint8_t new_value = (current_value & ~mask) | (new_value_for_bits & mask);
     
     if (new_value != current_value) {
-        bq25756e_i2c_write_register(device_address, reg, new_value);
+        return bq25756e_i2c_write_register(bus, device_address, reg, new_value);
     }
+    return true;
 }

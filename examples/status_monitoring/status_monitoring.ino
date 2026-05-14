@@ -16,13 +16,30 @@
 #define MIN_INPUT_VOLTAGE     4200
 #define MAX_INPUT_VOLTAGE     36000
 
-BQ25756E charger(BQ25756E_ADDR, SWITCHING_FREQ,
+#if (defined(PICO_BOARD) || defined(PICO_RP2040) || defined(PICO_SDK_VERSION_MAJOR)) && !defined(ARDUINO)
+#include "hardware/gpio.h"
+void initBus() {
+    i2c_init(i2c0, 400000);
+    gpio_set_function(4, GPIO_FUNC_I2C);
+    gpio_set_function(5, GPIO_FUNC_I2C);
+    gpio_pull_up(4);
+    gpio_pull_up(5);
+}
+BQ25756E charger(i2c0, BQ25756E_ADDR, SWITCHING_FREQ,
                  MAX_CHARGE_CURRENT, MAX_INPUT_CURRENT,
                  MIN_INPUT_VOLTAGE, MAX_INPUT_VOLTAGE);
+#else
+void initBus() {
+    Wire.begin();
+}
+BQ25756E charger(&Wire, BQ25756E_ADDR, SWITCHING_FREQ,
+                 MAX_CHARGE_CURRENT, MAX_INPUT_CURRENT,
+                 MIN_INPUT_VOLTAGE, MAX_INPUT_VOLTAGE);
+#endif
 
 void setup() {
     Serial.begin(115200);
-    Wire.begin();
+    initBus();
 
     charger.setDebugStream(&Serial);
 

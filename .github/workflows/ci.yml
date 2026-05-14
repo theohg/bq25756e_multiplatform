@@ -16,8 +16,12 @@ jobs:
         include:
           - board: esp32dev
             name: ESP32
+          - board: nanoatmega328
+            name: Arduino Nano
           - board: nucleo_wb55rg_p
             name: STM32 (STM32duino)
+          - board: pico
+            name: RP2040
 
     name: ${{ matrix.name }}
     steps:

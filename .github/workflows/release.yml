@@ -43,6 +43,11 @@ jobs:
             ### Supported Platforms
             - Arduino / ESP32 (Wire)
             - STM32 (STM32duino & HAL)
+            - RP2040 (Arduino core or Pico SDK)
+
+            ### Usage Model
+            - Pass the active bus handle directly to the constructor (`&Wire`, `&hi2c1`, `i2c0`)
+            - Use 7-bit I2C device addresses on every platform
 
             ### Installation
 
@@ -67,7 +72,7 @@ jobs:
             See the `examples/` folder for complete code.
 
             ### Documentation
-            Full documentation at [README.md](https://github.com/${{ github.repository }})
+            Full documentation at https://github.com/${{ github.repository }}
           files: |
             bq25756e_multiplatform-*.zip
           draft: false

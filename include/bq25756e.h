@@ -578,6 +578,9 @@ struct BQ25756E_Config {
 // --- BQ25756E CLASS ---
 class BQ25756E {
 private:
+    bus_handle_t _bus;            // Platform-specific I2C bus handle
+    uint8_t _lastError = BQ25756E_OK;
+
     // Hardware dependant settings
     uint8_t address;             // I2C address of the charger
     uint16_t switching_freq;     // Switching frequency of the charger in kHz
@@ -596,11 +599,18 @@ private:
     #endif
 
     // Private functions
+    void bq25756e_i2c_write_register(uint8_t device_address, uint8_t reg, uint8_t value);
+    void bq25756e_i2c_write_register16(uint8_t device_address, uint8_t reg, uint16_t value);
+    uint8_t bq25756e_i2c_read_register(uint8_t device_address, uint8_t reg);
+    uint16_t bq25756e_i2c_read_register16(uint8_t device_address, uint8_t reg);
+    void bq25756e_i2c_modify_register(uint8_t device_address, uint8_t reg, uint8_t mask, bool enable);
+    void bq25756e_i2c_modify_register_bits(uint8_t device_address, uint8_t reg, uint8_t mask, uint8_t new_value_for_bits);
     void chargPrint(const char* message);
 
 public:
     /**
      * @brief Construct a BQ25756E driver instance.
+     * @param bus       Platform-specific I2C bus handle.
      * @param addr      7-bit I2C address (default 0x6A).
      * @param freq      Switching frequency [kHz].
      * @param max_out_current Maximum charge (output) current [mA].
@@ -608,8 +618,8 @@ public:
      * @param min_volt  Minimum allowable input voltage [mV].
      * @param max_volt  Maximum allowable input voltage [mV].
      */
-    BQ25756E(uint8_t addr, uint16_t freq, uint16_t max_out_current, uint16_t max_in_current, uint16_t min_volt, uint16_t max_volt) :
-            address(addr),  switching_freq(freq), max_charge_current(max_out_current), max_input_current(max_in_current),
+    BQ25756E(bus_handle_t bus, uint8_t addr, uint16_t freq, uint16_t max_out_current, uint16_t max_in_current, uint16_t min_volt, uint16_t max_volt) :
+            _bus(bus), address(addr), switching_freq(freq), max_charge_current(max_out_current), max_input_current(max_in_current),
             min_voltage(min_volt), max_voltage(max_volt) {}
 
     /**
