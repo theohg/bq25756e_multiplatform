@@ -7,6 +7,8 @@
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-compatible-brightgreen)
 ![Language](https://img.shields.io/badge/C%2B%2B-11-blue)
 
+> 🔋 **Featured in the [EPFL Xplore](https://github.com/EPFLXplore) Mars-rover power board** — [firmware (ElonMux)](https://github.com/EPFLXplore/Power_SW/tree/master/ElonMux) & [hardware](https://github.com/EPFLXplore/Power_HW). This library manages its high-power battery charging.
+
 A C++ library for controlling the **[BQ25756E](https://www.ti.com/product/BQ25756E)** buck-boost battery charge controller from Texas Instruments via I2C. It supports Arduino, ESP32, STM32, and RP2040 targets and uses a per-instance bus handle so multiple buses or devices can be used without global transport state.
 
 ## Features
