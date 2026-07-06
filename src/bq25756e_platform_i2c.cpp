@@ -10,6 +10,21 @@
 
 #include "bq25756e_platform_i2c.h"
 
+#ifdef BQ25756E_PLATFORM_RP2040
+// Per-transaction I2C timeout for the RP2040 path. A blocking transfer can hang
+// forever if a slave clock-stretches indefinitely or the bus locks up; bounding
+// it lets the failure propagate through the existing bool returns instead of
+// freezing the caller's loop. 5 ms is generous at 400 kHz (each byte ~22.5 us).
+#define BQ25756E_RP2040_I2C_TIMEOUT_US 5000u
+#endif
+
+#ifdef BQ25756E_PLATFORM_STM32
+// Per-transaction I2C timeout (ms) for the STM32 HAL path. HAL_MAX_DELAY blocks
+// forever on the same clock-stretch/bus-lockup failures the RP2040 bound above
+// guards against; 5 ms mirrors that bound so the failure propagates instead.
+#define BQ25756E_STM32_I2C_TIMEOUT_MS 5u
+#endif
+
 /**
  * @brief Write an 8-bit value to a specific BQ25756E register.
  * @param bus The bus handle to use.
@@ -28,10 +43,10 @@ bool bq25756e_i2c_write_register(bus_handle_t bus, uint8_t device_address, uint8
     bus->write(value);
     return bus->endTransmission() == 0;
 #elif defined(BQ25756E_PLATFORM_STM32)
-    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, &value, 1, HAL_MAX_DELAY) == HAL_OK;
+    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, &value, 1, BQ25756E_STM32_I2C_TIMEOUT_MS) == HAL_OK;
 #elif defined(BQ25756E_PLATFORM_RP2040)
     uint8_t data[2] = { reg, value };
-    return i2c_write_blocking(bus, device_address, data, 2, false) == 2;
+    return i2c_write_timeout_us(bus, device_address, data, 2, false, BQ25756E_RP2040_I2C_TIMEOUT_US) == 2;
 #else
     (void)device_address;
     (void)reg;
@@ -62,13 +77,13 @@ bool bq25756e_i2c_write_register16(bus_handle_t bus, uint8_t device_address, uin
     uint8_t data_payload[2];
     data_payload[0] = value & 0xFF;
     data_payload[1] = (value >> 8) & 0xFF;
-    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_payload, 2, HAL_MAX_DELAY) == HAL_OK;
+    return HAL_I2C_Mem_Write(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_payload, 2, BQ25756E_STM32_I2C_TIMEOUT_MS) == HAL_OK;
 #elif defined(BQ25756E_PLATFORM_RP2040)
     uint8_t data_payload[3];
     data_payload[0] = reg;
     data_payload[1] = value & 0xFF;
     data_payload[2] = (value >> 8) & 0xFF;
-    return i2c_write_blocking(bus, device_address, data_payload, 3, false) == 3;
+    return i2c_write_timeout_us(bus, device_address, data_payload, 3, false, BQ25756E_RP2040_I2C_TIMEOUT_US) == 3;
 #else
     (void)device_address;
     (void)reg;
@@ -105,12 +120,12 @@ bool bq25756e_i2c_read_register(bus_handle_t bus, uint8_t device_address, uint8_
     *out = bus->read();
     return true;
 #elif defined(BQ25756E_PLATFORM_STM32)
-    return HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, out, 1, HAL_MAX_DELAY) == HAL_OK;
+    return HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, out, 1, BQ25756E_STM32_I2C_TIMEOUT_MS) == HAL_OK;
 #elif defined(BQ25756E_PLATFORM_RP2040)
-    if (i2c_write_blocking(bus, device_address, &reg, 1, true) != 1) {
+    if (i2c_write_timeout_us(bus, device_address, &reg, 1, true, BQ25756E_RP2040_I2C_TIMEOUT_US) != 1) {
         return false;
     }
-    return i2c_read_blocking(bus, device_address, out, 1, false) == 1;
+    return i2c_read_timeout_us(bus, device_address, out, 1, false, BQ25756E_RP2040_I2C_TIMEOUT_US) == 1;
 #else
     (void)device_address;
     (void)reg;
@@ -150,17 +165,17 @@ bool bq25756e_i2c_read_register16(bus_handle_t bus, uint8_t device_address, uint
     return true;
 #elif defined(BQ25756E_PLATFORM_STM32)
     uint8_t data_buffer[2];
-    if (HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_buffer, 2, HAL_MAX_DELAY) == HAL_OK) {
+    if (HAL_I2C_Mem_Read(bus, (uint16_t)(device_address << 1), reg, I2C_MEMADD_SIZE_8BIT, data_buffer, 2, BQ25756E_STM32_I2C_TIMEOUT_MS) == HAL_OK) {
         *out = (static_cast<uint16_t>(data_buffer[1]) << 8) | data_buffer[0];
         return true;
     }
     return false;
 #elif defined(BQ25756E_PLATFORM_RP2040)
     uint8_t data_buffer[2] = {0, 0};
-    if (i2c_write_blocking(bus, device_address, &reg, 1, true) != 1) {
+    if (i2c_write_timeout_us(bus, device_address, &reg, 1, true, BQ25756E_RP2040_I2C_TIMEOUT_US) != 1) {
         return false;
     }
-    if (i2c_read_blocking(bus, device_address, data_buffer, 2, false) != 2) {
+    if (i2c_read_timeout_us(bus, device_address, data_buffer, 2, false, BQ25756E_RP2040_I2C_TIMEOUT_US) != 2) {
         return false;
     }
     *out = (static_cast<uint16_t>(data_buffer[1]) << 8) | data_buffer[0];
