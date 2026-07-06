@@ -88,8 +88,22 @@
     #include <string.h>
     #include "hardware/i2c.h"
 
+#elif defined(BQ25756E_PLATFORM_NATIVE) || defined(BQ25756E_PLATFORM_HOST)
+    /* Native/host build (x86/ARM desktop) for unit testing. No MCU peripherals:
+       the I2C implementation is not linked, only the register logic and data
+       types are exercised. bus_handle_t falls back to void* in platform_i2c.h. */
+    #ifndef BQ25756E_PLATFORM_NATIVE
+        #define BQ25756E_PLATFORM_NATIVE
+    #endif
+    #ifndef PLATFORM_NATIVE
+        #define PLATFORM_NATIVE
+    #endif
+    #include <stdio.h>
+    #include <math.h>
+    #include <string.h>
+
 #else
-    #error "Unsupported platform. Define BQ25756E_PLATFORM_ARDUINO, BQ25756E_PLATFORM_STM32, or BQ25756E_PLATFORM_RP2040 manually."
+    #error "Unsupported platform. Define BQ25756E_PLATFORM_ARDUINO, BQ25756E_PLATFORM_STM32, BQ25756E_PLATFORM_RP2040, or BQ25756E_PLATFORM_NATIVE manually."
 #endif
 
 #endif /* BQ25756E_PLATFORM_CONFIG_H */
